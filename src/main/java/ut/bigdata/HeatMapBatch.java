@@ -49,8 +49,31 @@ public class HeatMapBatch {
             }
         });
 
+        DataSet<SensorRecord> recordsTemp40OrMore = records.filter(new FilterFunction<SensorRecord>() {
+            @Override
+            public boolean filter(SensorRecord record) throws Exception {
+                return record.getTemperature() >= 40;
+            }
+        });
+
+        DataSet<SensorRecord> recordsInTemp40 = records.filter(new FilterFunction<SensorRecord>() {
+            @Override
+            public boolean filter(SensorRecord record) throws Exception {
+                return record.getInOut().equals(SensorInOut.IN) && record.getTemperature() >= 40;
+            }
+        });
+
+        DataSet<SensorRecord> recordsOutTemp40 = records.filter(new FilterFunction<SensorRecord>() {
+            @Override
+            public boolean filter(SensorRecord record) throws Exception {
+                return record.getInOut().equals(SensorInOut.OUT) && record.getTemperature() >= 40;
+            }
+        });
+
 //        records.print();
 
-        System.out.println(String.format("Records IN = %s; OUT = %s", recordsIn.count(), recordsOut.count()));
+        //System.out.println(String.format("Records IN = %s; OUT = %s", recordsIn.count(), recordsOut.count()));
+        //System.out.println(String.format("Records 40 or more = %s", recordsTemp40OrMore.count()));
+        System.out.println(String.format("Records IN = %s, of >=40 Temp = %s; OUT = %s, of >=40 Temp = %s", recordsIn.count(), recordsInTemp40.count(), recordsOut.count(), recordsOutTemp40.count()));
     }
 }
