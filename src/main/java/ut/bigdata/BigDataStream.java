@@ -18,8 +18,16 @@ package ut.bigdata;
  * limitations under the License.
  */
 
+import org.apache.flink.api.common.functions.FilterFunction;
+import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
+import org.apache.flink.streaming.api.windowing.time.Time;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 
 /**
@@ -45,13 +53,50 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 public class BigDataStream {
 
     public static void main(String[] args) throws Exception {
-        // set up the batch execution environment
+        // set up the stream execution environment
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
-        DataStream<String> text = env.readTextFile(args[0]);
+        DataStream<String> text = env.readTextFile("dataset/IOT-temp.csv");
+
+
+        /*DataSet<Tuple4<String, String, Double, String>> dataset = env.readCsvFile("dataset/IOT-temp.csv")
+            .ignoreFirstLine()
+            .ignoreInvalidLines()
+            .includeFields(true, false, true, true, true)
+            .types(String.class, String.class, Double.class, String.class);*/
+
+        SingleOutputStreamOperator<SensorRecord> records = text.map(new MapFunction<String, SensorRecord>() {
+            @Override
+            public SensorRecord map(String item) throws Exception {
+                String[] items = item.split(",");
+                //Make sure the first line on data is removed, as streaming can't ignore it
+                String id = items[0];
+                LocalDateTime eventDate = LocalDateTime.parse(items[2], DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+                Double temperature = Double.parseDouble(items[3]);
+                SensorInOut inOut = items[4].equals("In") ? SensorInOut.IN : SensorInOut.OUT;
+                return new SensorRecord(id, eventDate, temperature, inOut);
+            }
+        });
+
+        SingleOutputStreamOperator<SensorRecord> recordsIn = records.filter(new FilterFunction<SensorRecord>() {
+            @Override
+            public boolean filter(SensorRecord record) throws Exception {
+                return record.getInOut().equals(SensorInOut.IN);
+            }
+        });
+
+        SingleOutputStreamOperator<SensorRecord> recordsOut = records.filter(new FilterFunction<SensorRecord>() {
+            @Override
+            public boolean filter(SensorRecord record) throws Exception {
+                return record.getInOut().equals(SensorInOut.OUT);
+            }
+        });
+
+        //recordsIn.print();
+        System.out.print(records.keyBy(SensorRecord::getEventDate).window(TumblingEventTimeWindows.of(Time.milliseconds(60))));
 
         //text = text.sortPartition(2, Order.DESCENDING);
-        text.print();
+        //text.print();
 
         //Date format?
         //Date date1=new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")

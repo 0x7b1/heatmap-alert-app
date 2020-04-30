@@ -2,23 +2,25 @@ package ut.bigdata;
 
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.common.operators.Order;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.tuple.Tuple4;
 
+import javax.xml.crypto.Data;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
+import java.util.*;
 
 public class HeatMapBatch {
     public static void main(String[] args) throws Exception {
         final ExecutionEnvironment env = ExecutionEnvironment.createLocalEnvironment();
 
         DataSet<Tuple4<String, String, Double, String>> dataset = env.readCsvFile("dataset/IOT-temp.csv")
-            .ignoreFirstLine()
+            //.ignoreFirstLine()
             .ignoreInvalidLines()
             .includeFields(true, false, true, true, true)
             .types(String.class, String.class, Double.class, String.class);
@@ -27,7 +29,7 @@ public class HeatMapBatch {
             @Override
             public SensorRecord map(Tuple4<String, String, Double, String> csvLine) throws Exception {
                 String id = csvLine.f0;
-                LocalDateTime eventDate = LocalDateTime.parse(csvLine.f1, DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm"));
+                LocalDateTime eventDate = LocalDateTime.parse(csvLine.f1, DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
                 Double temperature = csvLine.f2;
                 SensorInOut inOut = csvLine.f3.equals("In") ? SensorInOut.IN : SensorInOut.OUT;
 
@@ -70,10 +72,62 @@ public class HeatMapBatch {
             }
         });
 
-//        records.print();
+        //records.print();
 
         //System.out.println(String.format("Records IN = %s; OUT = %s", recordsIn.count(), recordsOut.count()));
         //System.out.println(String.format("Records 40 or more = %s", recordsTemp40OrMore.count()));
-        System.out.println(String.format("Records IN = %s, of >=40 Temp = %s; OUT = %s, of >=40 Temp = %s", recordsIn.count(), recordsInTemp40.count(), recordsOut.count(), recordsOutTemp40.count()));
+        //System.out.println(String.format("Records IN = %s, of >=40 Temp = %s; OUT = %s, of >=40 Temp = %s", recordsIn.count(), recordsInTemp40.count(), recordsOut.count(), recordsOutTemp40.count()));
+        /*
+        * Conclusion one of the previous testers reached
+        * Inside(Outside) = 0.89 * Outside+3 if Outside between 25,35
+        * otherwise with higher outside values the inside in 28,35 (more erratic?)
+        * */
+
+        //Sort the partition to iterate through it
+        //DataSet<SensorRecord> recSorted = records.sortPartition(SensorRecord::getEventDate, Order.ASCENDING);
+        //recSorted.print();
+
+        //Note collecting appears to ruin SortPartition, needs further checking
+        List<SensorRecord> resultsIn = recordsIn.collect();
+        resultsIn.sort(new Comparator<SensorRecord>() {
+            @Override
+            public int compare(SensorRecord o1, SensorRecord o2) {
+                return o2.getEventDate().compareTo(o1.getEventDate());
+            }
+        });
+
+        int oldest = 0;
+        int latest = 0;
+        List<Integer> nums = new ArrayList<>();
+        boolean oldSwap = false;
+        int tempLimit = 35;
+        for(int i = resultsIn.size()-1; i >= 0; i--) {
+            SensorRecord rec = resultsIn.get(i);
+            if (rec.getTemperature() >= tempLimit && !oldSwap) {
+                oldSwap = true;
+                oldest = i;
+            }
+            else if (rec.getTemperature() >= tempLimit && oldSwap){
+                continue;
+            }
+            else {
+                oldSwap = false;
+                SensorRecord oldRec = resultsIn.get(oldest);
+
+                //Ignores seconds for now
+                if (rec.getEventDate().getHour() > oldRec.getEventDate().getHour()
+                    && rec.getEventDate().getMinute() >= oldRec.getEventDate().getMinute()) {
+
+                    for(int j = oldest; j < latest; j++)
+                        nums.add(j);
+                }
+            }
+            latest = i;
+        }
+        /*System.out.println(results.get(0));
+        System.out.println(results.get(results.size()-1));
+        System.out.println(results.size());*/
+        System.out.println(nums);
+
     }
 }
