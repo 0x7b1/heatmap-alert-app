@@ -26,7 +26,7 @@ public class SensorSource extends RichParallelSourceFunction<SensorReading> {
 
             for (int i = 0; i < 10; i++){
                 currentTemp[i] += rand.nextGaussian() * 0.5;
-                ctx.collect(new SensorReading(sensorIds[i], currentTime, currentTemp[i]));
+//                ctx.collect(new SensorReading(sensorIds[i], currentTime, currentTemp[i], ""));
             }
 
             Thread.sleep(1200);

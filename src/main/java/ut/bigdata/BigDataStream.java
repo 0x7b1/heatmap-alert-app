@@ -25,6 +25,7 @@ import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
+import ut.bigdata.ref.SensorRecord;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

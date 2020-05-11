@@ -11,6 +11,6 @@ public class SensorTimeAssigner extends BoundedOutOfOrdernessTimestampExtractor<
 
     @Override
     public long extractTimestamp(SensorReading reading) {
-        return reading.timestamp;
+        return reading.getTimestamp();
     }
 }

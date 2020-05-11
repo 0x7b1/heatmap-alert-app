@@ -20,29 +20,32 @@ public class AverageSensorReading {
             .addSource(new SensorSource())
             .assignTimestampsAndWatermarks(new SensorTimeAssigner());
 
-        DataStream<SensorReading> avgTemp = sensorData
-            .map(r -> new SensorReading(r.id, r.timestamp, (r.temperature - 32) * (5.0 / 9.0)))
-            .keyBy(r -> r.id)
-            .timeWindow(Time.seconds(1))
-            .apply(new TemperatureAverager());
-
-        avgTemp.print();
-
-        env.execute("average sensor temperature");
+//        DataStream<SensorReading> avgTemp = sensorData
+////            .map(r -> new SensorReading(r.getTimestamp(), (r.getTemperature() - 32) * (5.0 / 9.0), ""))
+////            .map(r -> new SensorReading(r.getRoomId(), r.getTimestamp(), (r.getTemperature() - 32) * (5.0 / 9.0), ""))
+//            .keyBy(r -> r.getRoomId())
+//            .timeWindow(Time.seconds(1))
+//            .apply(new TemperatureAverager());
+//
+//        avgTemp.print();
+//
+//        env.execute("average sensor temperature");
     }
 
-    public static class TemperatureAverager implements WindowFunction<SensorReading, SensorReading, String, TimeWindow> {
-        @Override
-        public void apply(String sensorId, TimeWindow window, Iterable<SensorReading> input, Collector<SensorReading> out) throws Exception {
-            int count = 0;
-            double sum = .0;
-            for (SensorReading r : input) {
-                count++;
-                sum += r.temperature;
-            }
-            double avgTemp = sum / count;
-
-            out.collect(new SensorReading(sensorId, window.getEnd(), avgTemp));
-        }
-    }
+//    public static class TemperatureAverager implements WindowFunction<SensorReading, SensorReading, String, TimeWindow> {
+//        @Override
+//        public void apply(String sensorId, TimeWindow window, Iterable<SensorReading> input, Collector<SensorReading> out) throws Exception {
+//            int count = 0;
+//            double sum = .0;
+//            for (SensorReading r : input) {
+//                System.out.println("-----------" + r);
+//                count++;
+//                sum += r.getTemperature();
+//            }
+//
+//            double avgTemp = sum / count;
+//
+//            out.collect(new SensorReading(sensorId, window.getEnd(), avgTemp, ""));
+//        }
+//    }
 }

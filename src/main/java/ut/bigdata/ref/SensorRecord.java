@@ -1,4 +1,6 @@
-package ut.bigdata;
+package ut.bigdata.ref;
+
+import ut.bigdata.SensorInOut;
 
 import java.time.LocalDateTime;
 
