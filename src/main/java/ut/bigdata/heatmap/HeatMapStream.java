@@ -1,10 +1,14 @@
-package ut.bigdata;
+package ut.bigdata.heatmap;
 
+import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.cep.CEP;
 import org.apache.flink.cep.PatternStream;
 import org.apache.flink.cep.pattern.Pattern;
 import org.apache.flink.cep.pattern.conditions.IterativeCondition;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.metrics.Meter;
+import org.apache.flink.metrics.MeterView;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -12,6 +16,7 @@ import org.apache.flink.streaming.api.functions.IngestionTimeExtractor;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.util.Collector;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -24,8 +29,11 @@ public class HeatMapStream {
 
         // Input stream of IN sensor events
         DataStream<SensorReading> inputStreamSensorIn = env
-            .addSource(new SensorEventSource(SensorInOut.IN, 10))
+            .addSource(new SensorEventSource(SensorInOut.IN, 10, 38.068689, 6.426103))
+            .name("SensorIN")
             .assignTimestampsAndWatermarks(new IngestionTimeExtractor<>());
+
+//        inputStreamSensorIn.print();
 
         // Create a pattern of two consecutive events going above the threshold within the defined interval
         Pattern<SensorReading, ?> warningPattern = Pattern.<SensorReading>begin("first")
@@ -58,7 +66,7 @@ public class HeatMapStream {
                 SensorReading first = (SensorReading) pattern.get("first").get(0);
                 SensorReading second = (SensorReading) pattern.get("second").get(0);
 
-                Double avgTemperatures = first.getTemperature() + second.getTemperature() / 2;
+                double avgTemperatures = first.getTemperature() + second.getTemperature() / 2;
                 return new TemperatureWarning(first.getRoomId(), avgTemperatures);
             });
 
@@ -85,13 +93,19 @@ public class HeatMapStream {
                 }
             },
             TypeInformation.of(TemperatureAlert.class)
-        );
+        ).map(new RichMapFunction<TemperatureAlert, TemperatureAlert>() {
+            private transient Meter meter;
+
+            @Override
+            public TemperatureAlert map(TemperatureAlert temperatureAlert) throws Exception {
+                return temperatureAlert;
+            }
+        });
 
         warnings.print();
-//        alerts.print();
+        alerts.print();
 
         env.execute("Heatmap event alert system");
-
 
         // Split the stream into outside/inside temperature streams
         // Join the stream to compare the temperatures per room

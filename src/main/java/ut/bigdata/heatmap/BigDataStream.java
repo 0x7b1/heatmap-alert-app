@@ -1,4 +1,4 @@
-package ut.bigdata;
+package ut.bigdata.heatmap;
 
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -45,7 +45,7 @@ import java.time.format.DateTimeFormatter;
  * You will find the jar in
  * 		target/heatmap-alert-app-1.0-SNAPSHOT.jar
  * From the CLI you can then run
- * 		./bin/flink run -c ut.bigdata.ref.StreamingJob target/heatmap-alert-app-1.0-SNAPSHOT.jar
+ * 		./bin/flink run -c ut.bigdata.examples.StreamingJob target/heatmap-alert-app-1.0-SNAPSHOT.jar
  *
  * For more information on the CLI see:
  *

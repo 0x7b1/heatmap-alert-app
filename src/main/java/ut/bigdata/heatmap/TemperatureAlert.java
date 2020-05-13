@@ -1,11 +1,11 @@
-package ut.bigdata;
+package ut.bigdata.heatmap;
 
 import java.util.Objects;
 
 public class TemperatureAlert {
-    private Integer roomId;
+    private long roomId;
 
-    public TemperatureAlert(Integer roomId) {
+    public TemperatureAlert(long roomId) {
         this.roomId = roomId;
     }
 

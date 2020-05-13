@@ -1,6 +1,6 @@
 package ut.bigdata.ref;
 
-import ut.bigdata.SensorInOut;
+import ut.bigdata.heatmap.SensorInOut;
 
 import java.time.LocalDateTime;
 

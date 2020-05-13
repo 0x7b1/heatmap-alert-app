@@ -1,4 +1,4 @@
-package ut.bigdata;
+package ut.bigdata.heatmap;
 
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.functions.MapFunction;

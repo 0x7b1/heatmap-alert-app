@@ -1,12 +1,12 @@
-package ut.bigdata;
+package ut.bigdata.heatmap;
 
 import java.util.Objects;
 
 public class TemperatureWarning {
-    private Integer roomId;
+    private long roomId;
     private Double avgTemperature;
 
-    public TemperatureWarning(Integer roomId, Double avgTemperature) {
+    public TemperatureWarning(long roomId, Double avgTemperature) {
         this.roomId = roomId;
         this.avgTemperature = avgTemperature;
     }
@@ -15,7 +15,7 @@ public class TemperatureWarning {
         this(-1, -1.0);
     }
 
-    public Integer getRoomId() {
+    public long getRoomId() {
         return roomId;
     }
 
@@ -31,7 +31,7 @@ public class TemperatureWarning {
             '}';
     }
 
-    public void setRoomId(Integer roomId) {
+    public void setRoomId(long roomId) {
         this.roomId = roomId;
     }
 

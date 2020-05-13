@@ -18,14 +18,13 @@ package ut.bigdata.ref;
  * limitations under the License.
  */
 
-import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-
+import org.apache.flink.api.java.ExecutionEnvironment;
 
 /**
- * Skeleton for a Flink Streaming Job.
+ * Skeleton for a Flink Batch Job.
  *
- * For a full example of a Flink Streaming Job, see the SocketTextStreamWordCount.java
- * file in the same package/directory or have a look at the website.
+ * For a full example of a Flink Batch Job, see the WordCountJob.java file in the
+ * same package/directory or have a look at the website.
  *
  * You can also generate a .jar file that you can submit on your Flink
  * cluster.
@@ -35,17 +34,17 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
  * You will find the jar in
  * 		target/heatmap-alert-app-1.0-SNAPSHOT.jar
  * From the CLI you can then run
- * 		./bin/flink run -c ut.bigdata.ref.StreamingJob target/heatmap-alert-app-1.0-SNAPSHOT.jar
+ * 		./bin/flink run -c ut.bigdata.examples.BatchJob target/heatmap-alert-app-1.0-SNAPSHOT.jar
  *
  * For more information on the CLI see:
  *
  * http://flink.apache.org/docs/latest/apis/cli.html
  */
-public class StreamingJob {
+public class BatchJob {
 
 	public static void main(String[] args) throws Exception {
-		// set up the streaming execution environment
-		final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+		// set up the batch execution environment
+		final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 
 		/**
 		 * Here, you can start creating your execution plan for Flink.
@@ -53,7 +52,7 @@ public class StreamingJob {
 		 * Start with getting some data from the environment, like
 		 * 	env.readTextFile(textPath);
 		 *
-		 * then, transform the resulting DataStream<String> using operations
+		 * then, transform the resulting DataSet<String> using operations
 		 * like
 		 * 	.filter()
 		 * 	.flatMap()
@@ -63,11 +62,15 @@ public class StreamingJob {
 		 * and many more.
 		 * Have a look at the programming guide for the Java API:
 		 *
-		 * http://flink.apache.org/docs/latest/apis/streaming/index.html
+		 * http://flink.apache.org/docs/latest/apis/batch/index.html
+		 *
+		 * and the examples
+		 *
+		 * http://flink.apache.org/docs/latest/apis/batch/examples.html
 		 *
 		 */
 
 		// execute program
-		env.execute("Flink Streaming Java API Skeleton");
+		env.execute("Flink Batch Java API Skeleton");
 	}
 }

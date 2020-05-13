@@ -1,4 +1,4 @@
-package ut.bigdata;
+package ut.bigdata.heatmap;
 
 import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
 
