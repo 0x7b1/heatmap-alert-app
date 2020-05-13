@@ -1,0 +1,53 @@
+---
+version: '3'
+
+services:
+  job-cluster:
+    build: .
+    container_name: job-cluster
+    ports:
+    - "8081:8081"
+    - "9249:9249"
+    volumes:
+    - state:/state
+    command: /opt/flink/bin/standalone-job.sh start-foreground --job-classname com.github.mbode.flink_prometheus_example.PrometheusExampleJob --job-id 00000000000000000000000000000000 -Djobmanager.rpc.address=job-cluster -Dstate.checkpoints.dir=file:///state
+
+  taskmanager1:
+    build: .
+    container_name: taskmanager1
+    ports:
+    - "9250:9249"
+    volumes:
+    - state:/state
+    command: /opt/flink/bin/taskmanager.sh start-foreground -Djobmanager.rpc.address=job-cluster -Dstate.checkpoints.dir=file:///state
+
+  taskmanager2:
+    build: .
+    container_name: taskmanager2
+    ports:
+    - "9251:9249"
+    volumes:
+    - state:/state
+    command: /opt/flink/bin/taskmanager.sh start-foreground -Djobmanager.rpc.address=job-cluster -Dstate.checkpoints.dir=file:///state
+
+  prometheus:
+    image: prom/prometheus:v2.17.1
+    container_name: prometheus
+    ports:
+    - "9090:9090"
+    volumes:
+    - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    - ./prometheus/flink.rules.yml:/etc/prometheus/flink.rules.yml
+
+  grafana:
+    image: grafana/grafana:6.1.3
+    container_name: grafana
+    ports:
+    - "3000:3000"
+    environment:
+    - GF_SECURITY_ADMIN_PASSWORD=flink
+    volumes:
+    - ./grafana/provisioning/:/etc/grafana/provisioning/
+
+volumes:
+  state:

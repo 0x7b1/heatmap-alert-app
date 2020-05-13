@@ -2,8 +2,11 @@ package ut.bigdata.heatmap.example;
 
 import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.metrics.Counter;
+import org.apache.flink.metrics.Histogram;
 import org.apache.flink.metrics.Meter;
 import org.apache.flink.metrics.MeterView;
+import org.apache.flink.runtime.metrics.DescriptiveStatisticsHistogram;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -28,6 +31,8 @@ public class HeatmapFixedSource {
             .map(new RichMapFunction<SensorReading, SensorReading>() {
                 // A Meter measures an average throughput.
                 private transient Meter meter;
+                private transient Counter eventCounter;
+                private transient Histogram valueHistogram;
 
                 @Override
                 public void open(Configuration parameters) throws Exception {
@@ -35,11 +40,19 @@ public class HeatmapFixedSource {
                     this.meter = getRuntimeContext()
                         .getMetricGroup()
                         .meter("throughput", new MeterView(5));
+
+                    eventCounter = getRuntimeContext().getMetricGroup().counter("events");
+                    valueHistogram =
+                        getRuntimeContext()
+                            .getMetricGroup()
+                            .histogram("value_histogram", new DescriptiveStatisticsHistogram(10000));
                 }
 
                 @Override
                 public SensorReading map(SensorReading sensorReading) throws Exception {
                     this.meter.markEvent();
+                    eventCounter.inc();
+                    valueHistogram.update(1);
                     return sensorReading;
                 }
             });

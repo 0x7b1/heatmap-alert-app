@@ -7,8 +7,11 @@ import org.apache.flink.cep.PatternStream;
 import org.apache.flink.cep.pattern.Pattern;
 import org.apache.flink.cep.pattern.conditions.IterativeCondition;
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.metrics.Counter;
+import org.apache.flink.metrics.Histogram;
 import org.apache.flink.metrics.Meter;
 import org.apache.flink.metrics.MeterView;
+import org.apache.flink.runtime.metrics.DescriptiveStatisticsHistogram;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -22,6 +25,8 @@ import java.util.Map;
 
 public class HeatMapStream {
     private static final Double TEMPERATURE_THRESHOLD = 32.0;
+    private static final Double TEMPERATURE_MEAN = 38.068689;
+    private static final Double TEMPERATURE_STD = 2.147318;
 
     public static void main(String[] args) throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -29,7 +34,7 @@ public class HeatMapStream {
 
         // Input stream of IN sensor events
         DataStream<SensorReading> inputStreamSensorIn = env
-            .addSource(new SensorEventSource(SensorInOut.IN, 10, 38.068689, 6.426103))
+            .addSource(new SensorEventSource(SensorInOut.IN, 10, TEMPERATURE_MEAN, TEMPERATURE_STD))
             .name("SensorIN")
             .assignTimestampsAndWatermarks(new IngestionTimeExtractor<>());
 
@@ -95,9 +100,26 @@ public class HeatMapStream {
             TypeInformation.of(TemperatureAlert.class)
         ).map(new RichMapFunction<TemperatureAlert, TemperatureAlert>() {
             private transient Meter meter;
+            private transient Counter eventCounter;
+            private transient Histogram valueHistogram;
+
+            @Override
+            public void open(Configuration parameters) throws Exception {
+                super.open(parameters);
+                this.meter = getRuntimeContext()
+                    .getMetricGroup()
+                    .meter("throughput", new MeterView(5));
+
+                eventCounter = getRuntimeContext().getMetricGroup().counter("events");
+                valueHistogram =
+                    getRuntimeContext()
+                        .getMetricGroup()
+                        .histogram("value_histogram", new DescriptiveStatisticsHistogram(10000));
+            }
 
             @Override
             public TemperatureAlert map(TemperatureAlert temperatureAlert) throws Exception {
+                this.meter.markEvent();
                 return temperatureAlert;
             }
         });

@@ -122,6 +122,14 @@ under the License.
             <version>${flink.version}</version>
         </dependency>
 
+
+        <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-shade-plugin -->
+        <dependency>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-shade-plugin</artifactId>
+            <version>3.2.3</version>
+        </dependency>
+
     </dependencies>
 
 
@@ -195,6 +203,27 @@ under the License.
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.2.3</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <transformers>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>ut.bigdata.heatmap.HeatMapStream</mainClass>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <!-- We use the maven-shade plugin to create a fat jar that contains all dependencies
             except flink and it's transitive dependencies. The resulting fat-jar can be executed
             on a cluster. Change the value of Program-Class if your program entry point changes. -->
@@ -308,13 +337,11 @@ under the License.
                             </filters>
                             <!-- If you want to use ./bin/flink run <quickstart jar> uncomment the following lines.
                             This will add a Main-Class entry to the manifest file -->
-                            <!--
-                            <transformers>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>ut.bigdata.examples.StreamingJob</mainClass>
-                                </transformer>
-                            </transformers>
-                            -->
+<!--                            <transformers>-->
+<!--                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">-->
+<!--                                    <mainClass>ut.bigdata.heatmap.HeatMapStream</mainClass>-->
+<!--                                </transformer>-->
+<!--                            </transformers>-->
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                         </configuration>
                     </execution>
