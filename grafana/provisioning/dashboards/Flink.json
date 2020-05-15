@@ -451,7 +451,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "flink_taskmanager_job_task_operator_events",
+          "expr": "flink_taskmanager_job_task_operator_m_events",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{job}}",
@@ -537,7 +537,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "flink_taskmanager_job_task_operator_value_histogram",
+          "expr": "flink_taskmanager_job_task_operator_m_histogram",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{quantile}}",
