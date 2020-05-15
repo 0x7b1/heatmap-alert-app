@@ -1,4 +1,4 @@
-package ut.bigdata.heatmap;
+package ut.bigdata.heatmap.example;
 
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -25,7 +25,7 @@ import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
-import ut.bigdata.ref.SensorRecord;
+//import ut.bigdata.ref.SensorRecord;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -52,7 +52,7 @@ import java.time.format.DateTimeFormatter;
  * http://flink.apache.org/docs/latest/apis/cli.html
  */
 public class BigDataStream {
-
+/*
     public static void main(String[] args) throws Exception {
         // set up the stream execution environment
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -60,11 +60,11 @@ public class BigDataStream {
         DataStream<String> text = env.readTextFile("dataset/IOT-temp.csv");
 
 
-        /*DataSet<Tuple4<String, String, Double, String>> dataset = env.readCsvFile("dataset/IOT-temp.csv")
-            .ignoreFirstLine()
-            .ignoreInvalidLines()
-            .includeFields(true, false, true, true, true)
-            .types(String.class, String.class, Double.class, String.class);*/
+//        DataSet<Tuple4<String, String, Double, String>> dataset = env.readCsvFile("dataset/IOT-temp.csv")
+//            .ignoreFirstLine()
+//            .ignoreInvalidLines()
+//            .includeFields(true, false, true, true, true)
+//            .types(String.class, String.class, Double.class, String.class);
 
         SingleOutputStreamOperator<SensorRecord> records = text.map(new MapFunction<String, SensorRecord>() {
             @Override
@@ -104,4 +104,5 @@ public class BigDataStream {
         // execute program
         env.execute("Flink Batch Java API Skeleton");
     }
+    */
 }

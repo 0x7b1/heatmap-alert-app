@@ -1,17 +1,18 @@
-package ut.bigdata.heatmap;
+package ut.bigdata.heatmap.example;
 
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.tuple.Tuple4;
-import ut.bigdata.ref.SensorRecord;
+//import ut.bigdata.ref.SensorRecord;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class HeatMapBatch {
+    /*
     public static void main(String[] args) throws Exception {
         final ExecutionEnvironment env = ExecutionEnvironment.createLocalEnvironment();
 
@@ -73,11 +74,9 @@ public class HeatMapBatch {
         //System.out.println(String.format("Records IN = %s; OUT = %s", recordsIn.count(), recordsOut.count()));
         //System.out.println(String.format("Records 40 or more = %s", recordsTemp40OrMore.count()));
         //System.out.println(String.format("Records IN = %s, of >=40 Temp = %s; OUT = %s, of >=40 Temp = %s", recordsIn.count(), recordsInTemp40.count(), recordsOut.count(), recordsOutTemp40.count()));
-        /*
-        * Conclusion one of the previous testers reached
-        * Inside(Outside) = 0.89 * Outside+3 if Outside between 25,35
-        * otherwise with higher outside values the inside in 28,35 (more erratic?)
-        * */
+//        * Conclusion one of the previous testers reached
+//        * Inside(Outside) = 0.89 * Outside+3 if Outside between 25,35
+//        * otherwise with higher outside values the inside in 28,35 (more erratic?)
 
         //Sort the partition to iterate through it
         //DataSet<SensorRecord> recSorted = records.sortPartition(SensorRecord::getEventDate, Order.ASCENDING);
@@ -120,10 +119,7 @@ public class HeatMapBatch {
             }
             latest = i;
         }
-        /*System.out.println(results.get(0));
-        System.out.println(results.get(results.size()-1));
-        System.out.println(results.size());*/
         System.out.println(nums);
-
     }
+    */
 }

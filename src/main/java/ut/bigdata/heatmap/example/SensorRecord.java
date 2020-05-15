@@ -1,4 +1,4 @@
-package ut.bigdata.ref;
+package ut.bigdata.heatmap.example;
 
 import ut.bigdata.heatmap.SensorInOut;
 

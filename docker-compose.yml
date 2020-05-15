@@ -1,6 +1,10 @@
 ---
 version: '3'
 
+#networks:
+#  bridge:
+#    driver: bridge
+
 services:
   job-cluster:
     build: .
@@ -10,7 +14,7 @@ services:
     - "9249:9249"
     volumes:
     - state:/state
-    command: /opt/flink/bin/standalone-job.sh start-foreground --job-classname com.github.mbode.flink_prometheus_example.PrometheusExampleJob --job-id 00000000000000000000000000000000 -Djobmanager.rpc.address=job-cluster -Dstate.checkpoints.dir=file:///state
+    command: /opt/flink/bin/standalone-job.sh start-foreground --job-classname ut.bigdata.heatmap.example.MonitoringMetrics --job-id 00000000000000000000000000000000 -Djobmanager.rpc.address=job-cluster -Dstate.checkpoints.dir=file:///state
 
   taskmanager1:
     build: .
@@ -48,6 +52,43 @@ services:
     - GF_SECURITY_ADMIN_PASSWORD=flink
     volumes:
     - ./grafana/provisioning/:/etc/grafana/provisioning/
+
+#  zookeeper:
+#    image: confluentinc/cp-zookeeper:latest
+#    environment:
+#      ZOOKEEPER_CLIENT_PORT: 32181
+#      ZOOKEEPER_TICK_TIME: 2000
+#    networks:
+#      bridge:
+#        aliases:
+#          - zookeeper
+
+
+
+#  kafka:
+#    image: wurstmeister/kafka:latest
+#    depends_on:
+#      - zookeeper
+#    environment:
+#      KAFKA_BROKER_ID: 1
+#      KAFKA_ADVERTISED_HOST_NAME: 0.0.0.0
+#      KAFKA_ZOOKEEPER_CONNECT: zookeeper:32181
+#      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+#      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+#      JMX_PORT: 9999
+#    networks:
+#      bridge:
+#        aliases:
+#          - kafka
+#
+#  kafka-manager:
+#    image: sheepkiller/kafka-manager:latest
+#    environment:
+#      ZK_HOSTS: "zookeeper:32181"
+#    ports:
+#      - 9000:9000
+#    networks:
+#      - bridge
 
 volumes:
   state:

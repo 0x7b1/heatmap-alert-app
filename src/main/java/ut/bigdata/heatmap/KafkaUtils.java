@@ -1,10 +1,10 @@
 package ut.bigdata.heatmap;
 
-import ut.bigdata.config.Config;
+import ut.bigdata.heatmap.config.Config;
 
-import static ut.bigdata.config.Parameters.OFFSET;
-import static ut.bigdata.config.Parameters.KAFKA_HOST;
-import static ut.bigdata.config.Parameters.KAFKA_PORT;
+import static ut.bigdata.heatmap.config.Parameters.OFFSET;
+import static ut.bigdata.heatmap.config.Parameters.KAFKA_HOST;
+import static ut.bigdata.heatmap.config.Parameters.KAFKA_PORT;
 
 import java.util.Properties;
 

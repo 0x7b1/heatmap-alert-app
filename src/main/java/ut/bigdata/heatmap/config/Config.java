@@ -1,4 +1,4 @@
-package ut.bigdata.config;
+package ut.bigdata.heatmap.config;
 
 import java.util.HashMap;
 import java.util.List;

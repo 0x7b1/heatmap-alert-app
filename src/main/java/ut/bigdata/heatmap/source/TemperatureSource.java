@@ -4,20 +4,18 @@ import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
-import ut.bigdata.config.Config;
+import ut.bigdata.heatmap.config.Config;
 import ut.bigdata.heatmap.KafkaUtils;
 import ut.bigdata.heatmap.SensorReading;
-import ut.bigdata.heatmap.SensorSource;
 import ut.bigdata.heatmap.functions.JsonDeserializer;
 import ut.bigdata.heatmap.functions.JsonGeneratorWrapper;
 import ut.bigdata.heatmap.functions.TemperatureGenerator;
 import ut.bigdata.heatmap.functions.TimeStamper;
 
-import static ut.bigdata.config.Parameters.SENSOR_SOURCE;
-import static ut.bigdata.config.Parameters.RECORDS_PER_SECOND;
-import static ut.bigdata.config.Parameters.DATA_TOPIC;
+import static ut.bigdata.heatmap.config.Parameters.SENSOR_SOURCE;
+import static ut.bigdata.heatmap.config.Parameters.RECORDS_PER_SECOND;
+import static ut.bigdata.heatmap.config.Parameters.DATA_TOPIC;
 
-import java.io.IOException;
 import java.util.Properties;
 
 public class TemperatureSource {

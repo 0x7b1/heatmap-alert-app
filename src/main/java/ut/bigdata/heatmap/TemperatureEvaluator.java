@@ -1,24 +1,22 @@
 package ut.bigdata.heatmap;
 
 import org.apache.flink.api.common.restartstrategy.RestartStrategies;
-import org.apache.flink.configuration.ConfigConstants;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.TimeCharacteristic;
-import org.apache.flink.streaming.api.datastream.BroadcastStream;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
 import org.apache.flink.streaming.api.functions.timestamps.BoundedOutOfOrdernessTimestampExtractor;
 import org.apache.flink.streaming.api.windowing.time.Time;
-import ut.bigdata.config.Config;
+import ut.bigdata.heatmap.config.Config;
 import ut.bigdata.heatmap.source.TemperatureSource;
 
 import java.util.concurrent.TimeUnit;
 
-import static ut.bigdata.config.Parameters.CHECKPOINT_INTERVAL;
-import static ut.bigdata.config.Parameters.MIN_PAUSE_BETWEEN_CHECKPOINTS;
-import static ut.bigdata.config.Parameters.SOURCE_PARALLELISM;
-import static ut.bigdata.config.Parameters.OUT_OF_ORDERNESS;
+import static ut.bigdata.heatmap.config.Parameters.CHECKPOINT_INTERVAL;
+import static ut.bigdata.heatmap.config.Parameters.MIN_PAUSE_BETWEEN_CHECKPOINTS;
+import static ut.bigdata.heatmap.config.Parameters.SOURCE_PARALLELISM;
+import static ut.bigdata.heatmap.config.Parameters.OUT_OF_ORDERNESS;
 
 public class TemperatureEvaluator {
     private Config config;
