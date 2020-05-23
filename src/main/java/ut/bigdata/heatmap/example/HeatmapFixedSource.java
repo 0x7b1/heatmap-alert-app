@@ -15,6 +15,7 @@ import ut.bigdata.heatmap.processors.SensorReading;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class HeatmapFixedSource {
     public static void main(String[] args) throws Exception {
@@ -26,6 +27,7 @@ public class HeatmapFixedSource {
         sensorList.add(new SensorReading(1, 2, 30.0, SensorInOut.IN));
         sensorList.add(new SensorReading(1, 3, 31.0, SensorInOut.IN));
         sensorList.add(new SensorReading(1, 4, 32.0, SensorInOut.IN));
+
 
         DataStream<SensorReading> inputStreamShort = env.fromCollection(sensorList)
             .map(new RichMapFunction<SensorReading, SensorReading>() {
@@ -56,6 +58,7 @@ public class HeatmapFixedSource {
                     return sensorReading;
                 }
             });
+
 
         inputStreamShort.print();
 

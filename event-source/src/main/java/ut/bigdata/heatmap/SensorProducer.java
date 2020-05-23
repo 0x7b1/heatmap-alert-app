@@ -14,7 +14,7 @@ import java.util.Properties;
 import java.util.Random;
 
 public class SensorProducer {
-    static int numRooms = 2;
+    static int numRooms = 4;
     static String topicName = "sensor_temperatures";
 
     public static ProducerRecord<Room, Temperature> createTemperatureRecord(String source) {
@@ -43,7 +43,7 @@ public class SensorProducer {
             producer.send(createTemperatureRecord("IN"));
             producer.send(createTemperatureRecord("OUT"));
 
-            Thread.sleep(200);
+            Thread.sleep(900);
         }
     }
 }

@@ -12,3 +12,8 @@ docker-compose -p heatmap-stream up --build
 
 - Go to `127.0.0.1:3000` to see the Grafana Dashboard
 - Go to `127.0.0.1:8081` to see the Flink Dashboard
+
+
+## TODO
+
+- test .rebalance()
