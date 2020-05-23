@@ -1,4 +1,4 @@
-package ut.bigdata.heatmap;
+package ut.bigdata.heatmap.processors;
 
 import org.apache.flink.api.common.restartstrategy.RestartStrategies;
 import org.apache.flink.configuration.Configuration;

@@ -42,8 +42,8 @@ public class MonitoringMetrics {
 
                 @Override
                 public void open(Configuration parameters) throws Exception {
-                    eventCounter = getRuntimeContext().getMetricGroup().counter("m_events");
-                    valueHistogram = getRuntimeContext().getMetricGroup().histogram("m_histogram", new DescriptiveStatisticsHistogram(10_000));
+                    eventCounter = getRuntimeContext().getMetricGroup().counter("mevents");
+                    valueHistogram = getRuntimeContext().getMetricGroup().histogram("mhistogram", new DescriptiveStatisticsHistogram(10_000));
                 }
 
                 @Override

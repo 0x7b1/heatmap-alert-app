@@ -1,4 +1,4 @@
-package ut.bigdata.heatmap;
+package ut.bigdata.heatmap.processors;
 
 import org.apache.flink.api.java.utils.ParameterTool;
 import ut.bigdata.heatmap.config.Config;

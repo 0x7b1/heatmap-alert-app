@@ -7,8 +7,11 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="heatmap-alert-app" />
+        <module name="event-source" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="heatmap-streaming" target="1.7" />
+    </bytecodeTargetLevel>
   </component>
 </project>

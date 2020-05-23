@@ -1,7 +1,7 @@
 package ut.bigdata.heatmap.functions;
 
-import ut.bigdata.heatmap.SensorInOut;
-import ut.bigdata.heatmap.SensorReading;
+import ut.bigdata.heatmap.processors.SensorInOut;
+import ut.bigdata.heatmap.processors.SensorReading;
 
 import java.util.Calendar;
 import java.util.Random;

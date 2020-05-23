@@ -10,8 +10,8 @@ import org.apache.flink.runtime.metrics.DescriptiveStatisticsHistogram;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import ut.bigdata.heatmap.SensorInOut;
-import ut.bigdata.heatmap.SensorReading;
+import ut.bigdata.heatmap.processors.SensorInOut;
+import ut.bigdata.heatmap.processors.SensorReading;
 
 import java.util.ArrayList;
 import java.util.List;

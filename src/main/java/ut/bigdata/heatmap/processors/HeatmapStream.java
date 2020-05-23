@@ -1,4 +1,4 @@
-package ut.bigdata.heatmap;
+package ut.bigdata.heatmap.processors;
 
 import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
@@ -19,11 +19,10 @@ import org.apache.flink.streaming.api.functions.IngestionTimeExtractor;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.util.Collector;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class HeatMapStream {
+public class HeatmapStream {
     private static final Double TEMPERATURE_THRESHOLD = 32.0;
     private static final Double TEMPERATURE_MEAN = 38.068689;
     private static final Double TEMPERATURE_STD = 2.147318;
@@ -41,7 +40,8 @@ public class HeatMapStream {
 //        inputStreamSensorIn.print();
 
         // Create a pattern of two consecutive events going above the threshold within the defined interval
-        Pattern<SensorReading, ?> warningPattern = Pattern.<SensorReading>begin("first")
+        Pattern<SensorReading, ?> warningPattern = Pattern
+            .<SensorReading>begin("first")
             .subtype(SensorReading.class)
             .where(new IterativeCondition<SensorReading>() {
                 @Override
@@ -81,7 +81,7 @@ public class HeatMapStream {
             .next("second")
             .within(Time.seconds(10));
 
-        // Create an pattern stream for the alert pattern
+        // Create a pattern stream for the alert pattern
         PatternStream<TemperatureWarning> alertPatternStream = CEP.pattern(
             warnings.keyBy("roomId"),
             alertPattern

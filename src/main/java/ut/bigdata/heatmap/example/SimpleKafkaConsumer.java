@@ -28,8 +28,8 @@ public class SimpleKafkaConsumer {
     public static void main(String[] args) throws Exception {
         String inputTopic = "test";
         String outputTopic = "test_out";
-        String consumerGroup = "console-consumer-70917";
-        String address = "localhost:9092";
+        String consumerGroup = "console-consumer-67781";
+        String address = "localhost:29092";
 
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
@@ -41,8 +41,8 @@ public class SimpleKafkaConsumer {
 
         stringStream
             .map(new WordsCapitalizer())
-//            .print();
             .addSink(flinkKafkaProducer);
+//            .print();
 
         env.execute();
     }
