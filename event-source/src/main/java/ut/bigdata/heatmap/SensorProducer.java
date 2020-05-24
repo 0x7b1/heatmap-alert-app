@@ -16,7 +16,7 @@ import java.util.Random;
 public class SensorProducer {
     static String topicName = "sensor_temperatures";
     static String kafkaServer = "kafka:9092";
-    static int numRooms = 2;
+    static int numRooms = 5;
 
     public static ProducerRecord<Room, Temperature> createTemperatureRecord(String source) {
         Random rand = new Random();

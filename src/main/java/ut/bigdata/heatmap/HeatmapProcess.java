@@ -34,11 +34,14 @@ public class HeatmapProcess {
     static String inputTopic = "sensor_temperatures";
     static String consumerGroup = "sensor_consumer";
     static String kafkaAddress = "kafka:9092";
-//    static String kafkaAddress = "localhost:29092";
+
+    //    static String kafkaAddress = "localhost:29092";
+//    static String influxDBHost = "http://localhost:8086";
 
     static String influxDBName = "sensor_temperatures";
-    static String influxDBHost = "localhost:8086";
-    //    static String influxDBHost = "http://localhost:8086";
+    static String influxDBHost = "http://influxdb:8086";
+    static String influxDBUser = "admin";
+    static String influxDBPassword = "admin";
     static String influxMeasurementAvg = "rooms_avg";
     static String influxMeasurementTemperatures = "rooms_temperatures";
 
@@ -100,11 +103,11 @@ public class HeatmapProcess {
         }
     }
 
-    public static InfluxDBSink createInfluxSink(String influxDBHost, String influxDBName) {
+    public static InfluxDBSink createInfluxSink(String influxDBHost, String influxDBName, String influxDBUser, String influxDBPassword) {
         InfluxDBConfig config = InfluxDBConfig.builder(
             influxDBHost,
-            "root",
-            "root",
+            influxDBUser,
+            influxDBPassword,
             influxDBName)
             .batchActions(1000)
             .flushDuration(100, TimeUnit.MILLISECONDS)
@@ -186,9 +189,9 @@ public class HeatmapProcess {
 
         DataStream<TemperatureRecord> temperatureRecords = env
             .addSource(kafkaConsumerSource)
-            .assignTimestampsAndWatermarks(new TemperatureRecordTimestampExtractor(Time.seconds(0)));
-        // This will spread messages from partitions evenly across flink workers
-//            .rebalance();
+            .assignTimestampsAndWatermarks(new TemperatureRecordTimestampExtractor(Time.seconds(0)))
+            // This will spread messages from partitions evenly across flink workers
+            .rebalance();
 
         DataStream<Tuple3<String, Double, Long>> in = temperatureRecords
             .filter(e -> e.getSource().equals("IN"))
@@ -211,14 +214,14 @@ public class HeatmapProcess {
             .apply(new JoinWindowsToTemperatureRelation());
 
         // Sinking to InfluxDB
-//        InfluxDBSink influxDBSink = createInfluxSink(influxDBHost, influxDBName);
-//        temperatureRoomSourceAvgs
-//            .map(new TemperatureAvgRoomsToInfluxDataPoint(influxMeasurementAvg));
-//            .addSink(influxDBSink);
+        InfluxDBSink influxDBSink = createInfluxSink(influxDBHost, influxDBName, influxDBUser, influxDBPassword);
+        temperatureRoomSourceAvgs
+            .map(new TemperatureAvgRoomsToInfluxDataPoint(influxMeasurementAvg))
+            .addSink(influxDBSink);
 
         // Sinking IN/OUT room temperatures
-//        in.map(new TemperatureRoomsToInfluxDataPoint(influxMeasurementTemperatures, "IN")).addSink(influxDBSink);
-//        out.map(new TemperatureRoomsToInfluxDataPoint(influxMeasurementTemperatures, "OUT")).addSink(influxDBSink);
+        in.map(new TemperatureRoomsToInfluxDataPoint(influxMeasurementTemperatures, "IN")).addSink(influxDBSink);
+        out.map(new TemperatureRoomsToInfluxDataPoint(influxMeasurementTemperatures, "OUT")).addSink(influxDBSink);
 
         temperatureRoomSourceAvgs.print();
         System.out.println(env.getExecutionPlan());

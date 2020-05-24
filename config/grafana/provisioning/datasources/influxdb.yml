@@ -1,0 +1,17 @@
+apiVersion: 1
+
+deleteDatasources:
+- name: TemperaturesInfluxDB
+  orgId: 1
+
+datasources:
+- name: TemperaturesInfluxDB
+  type: influxdb
+  access: proxy
+  orgId: 1
+  url: http://influxdb:8086
+  database: sensor_temperatures
+  user: admin
+  password: admin
+  # isDefault: true
+  # editable: false
