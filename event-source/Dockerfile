@@ -11,7 +11,7 @@
 #COPY --from=builder /home/app/target/*.jar $FLINK_HOME/lib/
 
 # One-stage build up
-FROM flink:1.10.0
-#COPY config/flink $FLINK_HOME/conf
-RUN mv $FLINK_HOME/opt/flink-metrics-prometheus-*.jar $FLINK_HOME/lib
-COPY target/*.jar $FLINK_HOME/lib/
+FROM openjdk:8-jdk-alpine
+ARG JAR_FILE=target/*.jar
+COPY ${JAR_FILE} app.jar
+ENTRYPOINT ["java","-jar","/app.jar"]

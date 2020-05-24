@@ -22,6 +22,8 @@ import org.apache.flink.streaming.connectors.influxdb.InfluxDBPoint;
 import org.apache.flink.streaming.connectors.influxdb.InfluxDBSink;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
 import org.apache.flink.util.Collector;
+import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import ut.bigdata.heatmap.models.TemperatureRecord;
 
 import java.util.HashMap;
@@ -31,17 +33,19 @@ import java.util.concurrent.TimeUnit;
 public class HeatmapProcess {
     static String inputTopic = "sensor_temperatures";
     static String consumerGroup = "sensor_consumer";
-    static String kafkaAddress = "localhost:29092";
+    static String kafkaAddress = "kafka:9092";
+//    static String kafkaAddress = "localhost:29092";
 
     static String influxDBName = "sensor_temperatures";
-    static String influxDBHost = "http://localhost:8086";
+    static String influxDBHost = "localhost:8086";
+    //    static String influxDBHost = "http://localhost:8086";
     static String influxMeasurementAvg = "rooms_avg";
     static String influxMeasurementTemperatures = "rooms_temperatures";
 
     public static FlinkKafkaConsumer<TemperatureRecord> createTemperatureConsumer(String topic, String kafkaAddress, String consumerGroup) {
         Properties props = new Properties();
-        props.put("bootstrap.servers", kafkaAddress);
-        props.put("group.id", consumerGroup);
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaAddress);
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, consumerGroup);
 
         return new FlinkKafkaConsumer<>(
             topic,
@@ -157,10 +161,9 @@ public class HeatmapProcess {
         }
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void testKafkaConnection() throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
-//        env.setParallelism(1);
 
         FlinkKafkaConsumer<TemperatureRecord> kafkaConsumerSource =
             createTemperatureConsumer(inputTopic, kafkaAddress, consumerGroup);
@@ -168,6 +171,24 @@ public class HeatmapProcess {
         DataStream<TemperatureRecord> temperatureRecords = env
             .addSource(kafkaConsumerSource)
             .assignTimestampsAndWatermarks(new TemperatureRecordTimestampExtractor(Time.seconds(0)));
+
+        temperatureRecords.print();
+
+        env.execute("Relation between temperatures IN/OUT per room");
+    }
+
+    public static void runTemperatureStreaming() throws Exception {
+        final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
+
+        FlinkKafkaConsumer<TemperatureRecord> kafkaConsumerSource =
+            createTemperatureConsumer(inputTopic, kafkaAddress, consumerGroup);
+
+        DataStream<TemperatureRecord> temperatureRecords = env
+            .addSource(kafkaConsumerSource)
+            .assignTimestampsAndWatermarks(new TemperatureRecordTimestampExtractor(Time.seconds(0)));
+        // This will spread messages from partitions evenly across flink workers
+//            .rebalance();
 
         DataStream<Tuple3<String, Double, Long>> in = temperatureRecords
             .filter(e -> e.getSource().equals("IN"))
@@ -190,18 +211,23 @@ public class HeatmapProcess {
             .apply(new JoinWindowsToTemperatureRelation());
 
         // Sinking to InfluxDB
-        InfluxDBSink influxDBSink = createInfluxSink(influxDBHost, influxDBName);
-        temperatureRoomSourceAvgs
-            .map(new TemperatureAvgRoomsToInfluxDataPoint(influxMeasurementAvg))
-            .addSink(influxDBSink);
+//        InfluxDBSink influxDBSink = createInfluxSink(influxDBHost, influxDBName);
+//        temperatureRoomSourceAvgs
+//            .map(new TemperatureAvgRoomsToInfluxDataPoint(influxMeasurementAvg));
+//            .addSink(influxDBSink);
 
         // Sinking IN/OUT room temperatures
-        in.map(new TemperatureRoomsToInfluxDataPoint(influxMeasurementTemperatures, "IN")).addSink(influxDBSink);
-        out.map(new TemperatureRoomsToInfluxDataPoint(influxMeasurementTemperatures, "OUT")).addSink(influxDBSink);
+//        in.map(new TemperatureRoomsToInfluxDataPoint(influxMeasurementTemperatures, "IN")).addSink(influxDBSink);
+//        out.map(new TemperatureRoomsToInfluxDataPoint(influxMeasurementTemperatures, "OUT")).addSink(influxDBSink);
 
-//        temperatureRoomSourceAvgs.print();
+        temperatureRoomSourceAvgs.print();
         System.out.println(env.getExecutionPlan());
 
         env.execute("Relation between temperatures IN/OUT per room");
+    }
+
+    public static void main(String[] args) throws Exception {
+//        testKafkaConnection();
+        runTemperatureStreaming();
     }
 }

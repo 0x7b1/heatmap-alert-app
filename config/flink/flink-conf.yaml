@@ -1,0 +1,15 @@
+# metrics.reporters: prom
+# metrics.reporter.prom.class: org.apache.flink.metrics.prometheus.PrometheusReporter
+
+# metrics.reporter.prom.port: 9999
+
+#metrics.reporter.influxdb.class: org.apache.flink.metrics.influxdb.InfluxdbReporter
+#metrics.reporter.influxdb.host: localhost
+#metrics.reporter.influxdb.port: 8086
+#metrics.reporter.influxdb.db: flink
+#metrics.reporter.influxdb.username: root
+#metrics.reporter.influxdb.password: root
+#metrics.reporter.influxdb.retentionPolicy: one_hour
+#metrics.reporter.influxdb.consistency: ANY
+#metrics.reporter.influxdb.connectTimeout: 60000
+#metrics.reporter.influxdb.writeTimeout: 60000

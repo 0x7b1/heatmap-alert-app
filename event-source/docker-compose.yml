@@ -1,24 +1,27 @@
-version: '3'
+version: '3.5'
 
 services:
   zookeeper:
     container_name: zookeeper
-    image: 'bitnami/zookeeper:latest'
+    image: bitnami/zookeeper:latest
     ports:
       - '2181:2181'
     volumes:
-      - 'zookeeper_data:/bitnami'
+      - zookeeper_data:/bitnami
     environment:
       - ALLOW_ANONYMOUS_LOGIN=yes
+    networks:
+      - proxynet
 
   kafka:
     container_name: kafka
-    image: 'bitnami/kafka:latest'
+    image: bitnami/kafka:latest
     ports:
       - 9092:9092
       - 29092:29092
     volumes:
-      - 'kafka_data:/bitnami'
+      - kafka_data:/bitnami
+    #      - /path/to/server.properties:/bitnami/kafka/conf/server.properties
     environment:
       - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
       - ALLOW_PLAINTEXT_LISTENER=yes
@@ -27,8 +30,11 @@ services:
       - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
     depends_on:
       - zookeeper
+    networks:
+      - proxynet
 
   kafka_manager:
+    container_name: kafka_manager
     image: hlebalbau/kafka-manager:stable
     ports:
       - 9000:9000
@@ -38,9 +44,23 @@ services:
     command: -Dpidfile.path=/dev/null
     depends_on:
       - zookeeper
+    networks:
+      - proxynet
+
+  kafka_consumer_producer:
+    build: .
+    container_name: kafka_consumer_producer
+    depends_on:
+      - kafka
+    networks:
+      - proxynet
 
 volumes:
   zookeeper_data:
     driver: local
   kafka_data:
     driver: local
+
+networks:
+  proxynet:
+    name: custom_network

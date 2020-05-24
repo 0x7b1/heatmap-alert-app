@@ -19,13 +19,13 @@ public class RoomPartitioner implements Partitioner {
 
     @Override
     public int partition(String topic, Object key, byte[] keyBytes, Object value, byte[] valueBytes, Cluster cluster) {
-//        Room tk = (Room) key;
-//
-//        List<PartitionInfo> partitionInfos = cluster.partitionsForTopic(topic);
-//        int numPartitions = partitionInfos.size();
-//        int room = Integer.parseInt(tk.getLocation().split("room")[1]);
-//
-//        return partitionInfos.get(room % numPartitions).partition();
-        return 1;
+        Room room = (Room) key;
+
+        List<PartitionInfo> partitions = cluster.partitionsForTopic(topic);
+        int numPartitions = partitions.size();
+        int roomId = Integer.parseInt(room.getRoomId().split("_")[0]);
+        int roomPartition = partitions.get(roomId % numPartitions).partition();
+
+        return roomPartition;
     }
 }

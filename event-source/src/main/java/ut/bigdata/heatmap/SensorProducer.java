@@ -14,15 +14,17 @@ import java.util.Properties;
 import java.util.Random;
 
 public class SensorProducer {
-    static int numRooms = 4;
     static String topicName = "sensor_temperatures";
+    static String kafkaServer = "kafka:9092";
+    static int numRooms = 2;
 
     public static ProducerRecord<Room, Temperature> createTemperatureRecord(String source) {
         Random rand = new Random();
-        String roomId = "room_" + rand.nextInt(numRooms) + "_" + source;
+        String roomId = rand.nextInt(numRooms) + "_" + source;
         Room key = new Room(roomId);
 
-        long timestamp = ZonedDateTime.now().toEpochSecond() * 1000;
+//        long timestamp = ZonedDateTime.now().toEpochSecond() * 1000;
+        long timestamp = System.currentTimeMillis();
         int temperatureValue = rand.nextInt(20) + 20;
         Temperature value = new Temperature(temperatureValue, timestamp);
 
@@ -31,19 +33,24 @@ public class SensorProducer {
         return record;
     }
 
-    public static void main(String[] args) throws InterruptedException {
+    public static KafkaProducer<Room, Temperature> createKafkaProducer() {
         Properties props = new Properties();
-        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:29092");
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaServer);
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, RoomSerializer.class);
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, TemperatureSerializer.class);
+        props.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, RoomPartitioner.class);
 
-        KafkaProducer<Room, Temperature> producer = new KafkaProducer<>(props);
+        return new KafkaProducer<>(props);
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        KafkaProducer<Room, Temperature> producer = createKafkaProducer();
 
         while (true) {
             producer.send(createTemperatureRecord("IN"));
             producer.send(createTemperatureRecord("OUT"));
 
-            Thread.sleep(900);
+            Thread.sleep(500);
         }
     }
 }
