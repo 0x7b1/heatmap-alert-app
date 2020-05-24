@@ -4,15 +4,17 @@ This application is a stream implementation of https://www.kaggle.com/atulanandj
 
 ## How to run
 
-Build the docker images in conjunction with docker-compose 
+This project depends upon two clusters
+The first contains the dependencies regarding to Kakfa
 
 ```shell script
-docker-compose -p heatmap-stream up --build
+$ cd event-source
+$ docker-compose up --build
 ```
 
-- Go to `127.0.0.1:3000` to see the Grafana Dashboard
-- Go to `127.0.0.1:8081` to see the Flink Dashboard
-
+```shell script
+$ docker-compose up --build
+```
 
 ## TODO
 

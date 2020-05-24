@@ -7,7 +7,7 @@ RUN mvn -f /home/app/pom.xml clean package
 # Package Stage
 FROM openjdk:8-jdk-alpine
 ARG JAR_FILE=/home/app/target/*.jar
-COPY --from=builder ${JAR_FILE} /home/app/target/app.jar
+COPY --from=builder ${JAR_FILE} /app.jar
 ENTRYPOINT ["java","-jar","/app.jar"]
 
 ## One-stage build up
