@@ -19,7 +19,6 @@
   "panels": [
     {
       "collapsed": false,
-      "datasource": null,
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -55,8 +54,8 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 14,
-        "w": 23,
+        "h": 15,
+        "w": 18,
         "x": 1,
         "y": 1
       },
@@ -67,6 +66,7 @@
       "legend": {
         "show": true
       },
+      "options": {},
       "reverseYBuckets": false,
       "targets": [
         {
@@ -137,6 +137,97 @@
       "yBucketSize": null
     },
     {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "Prometheus",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 14,
+        "w": 5,
+        "x": 19,
+        "y": 1
+      },
+      "id": 23,
+      "legend": {
+        "alignAsTable": false,
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": false,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 2,
+      "points": true,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "flink_taskmanager_job_task_operator_veneco",
+          "format": "time_series",
+          "instant": false,
+          "intervalFactor": 1,
+          "legendFormat": "Alerts",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Alert Counter",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "transparent": true,
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
       "cacheTimeout": null,
       "datasource": "TemperaturesInfluxDB",
       "fieldConfig": {
@@ -174,11 +265,38 @@
         "h": 6,
         "w": 24,
         "x": 0,
-        "y": 15
+        "y": 16
       },
       "id": 4,
       "links": [],
       "options": {
+        "fieldOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "defaults": {
+            "mappings": [],
+            "max": 40,
+            "min": 0,
+            "thresholds": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#EAB839",
+                "value": 20
+              },
+              {
+                "color": "red",
+                "value": 30
+              }
+            ],
+            "unit": "celsius"
+          },
+          "override": {},
+          "values": false
+        },
         "orientation": "horizontal",
         "reduceOptions": {
           "calcs": [
@@ -189,15 +307,22 @@
         "showThresholdLabels": false,
         "showThresholdMarkers": false
       },
-      "pluginVersion": "7.0.0",
+      "pluginVersion": "6.3.7",
       "targets": [
         {
           "alias": "Room [[tag_room]]",
-          "groupBy": [],
+          "groupBy": [
+            {
+              "params": [
+                "$interval"
+              ],
+              "type": "time"
+            }
+          ],
           "measurement": "rooms_temperatures",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"value\") FROM \"rooms_temperatures\" WHERE (\"source\" = 'IN') GROUP BY time(1m), room",
+          "query": "SELECT last(\"value\"), room FROM \"rooms_temperatures\" WHERE (\"source\" = 'IN') AND time > now() - 15s GROUP BY \"room\"",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -208,6 +333,10 @@
                   "value"
                 ],
                 "type": "field"
+              },
+              {
+                "params": [],
+                "type": "median"
               }
             ]
           ],
@@ -264,11 +393,38 @@
         "h": 6,
         "w": 24,
         "x": 0,
-        "y": 21
+        "y": 22
       },
       "id": 5,
       "links": [],
       "options": {
+        "fieldOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "defaults": {
+            "mappings": [],
+            "max": 40,
+            "min": 0,
+            "thresholds": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#EAB839",
+                "value": 20
+              },
+              {
+                "color": "red",
+                "value": 30
+              }
+            ],
+            "unit": "celsius"
+          },
+          "override": {},
+          "values": false
+        },
         "orientation": "horizontal",
         "reduceOptions": {
           "calcs": [
@@ -279,7 +435,7 @@
         "showThresholdLabels": false,
         "showThresholdMarkers": false
       },
-      "pluginVersion": "7.0.0",
+      "pluginVersion": "6.3.7",
       "targets": [
         {
           "alias": "Room [[tag_room]]",
@@ -287,7 +443,7 @@
           "measurement": "rooms_temperatures",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"value\") FROM \"rooms_temperatures\" WHERE (\"source\" = 'OUT') GROUP BY time(1m), room",
+          "query": "SELECT last(\"value\"), room FROM \"rooms_temperatures\" WHERE (\"source\" = 'OUT') AND time > now() - 15s GROUP BY \"room\"",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -318,17 +474,105 @@
     },
     {
       "collapsed": false,
-      "datasource": null,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 27
+        "y": 28
       },
       "id": 7,
       "panels": [],
       "title": "Performance Metrics",
       "type": "row"
+    },
+    {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": false,
+      "colors": [
+        "#d44a3a",
+        "rgba(237, 129, 40, 0.89)",
+        "#299c46"
+      ],
+      "datasource": "Prometheus",
+      "decimals": 1,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "format": "ms",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 29
+      },
+      "id": 21,
+      "interval": null,
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "options": {},
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "repeat": null,
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": false,
+        "ymax": null,
+        "ymin": null
+      },
+      "tableColumn": "flink_jobmanager_job_uptime{host=\"job_cluster\", instance=\"job-cluster:9249\", job=\"flink\", job_id=\"00000000000000000000000000000000\", job_name=\"Relation_between_temperatures_IN_OUT_per_room\"}",
+      "targets": [
+        {
+          "expr": "flink_jobmanager_job_uptime{job_name=\"Relation_between_temperatures_IN_OUT_per_room\"}",
+          "format": "time_series",
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "thresholds": ".5,.8",
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Uptime",
+      "type": "singlestat",
+      "valueFontSize": "80%",
+      "valueMaps": [],
+      "valueName": "current"
     },
     {
       "aliasColors": {},
@@ -348,7 +592,7 @@
         "h": 9,
         "w": 16,
         "x": 0,
-        "y": 28
+        "y": 32
       },
       "hiddenSeries": false,
       "id": 11,
@@ -437,7 +681,6 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -450,7 +693,7 @@
         "h": 9,
         "w": 8,
         "x": 16,
-        "y": 28
+        "y": 32
       },
       "hiddenSeries": false,
       "id": 19,
@@ -479,7 +722,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "flink_taskmanager_job_task_numBytesOutPerSecond{job_name=\"Relation_between_temperatures_IN_OUT_per_room\"}",
+          "expr": "flink_taskmanager_job_task_operator_fetch_latency_avg",
           "instant": false,
           "interval": "",
           "legendFormat": "{{task_name}}",
@@ -490,7 +733,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Flink Bytes Out",
+      "title": "Average Latency",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -545,7 +788,7 @@
         "h": 9,
         "w": 16,
         "x": 0,
-        "y": 37
+        "y": 41
       },
       "hiddenSeries": false,
       "id": 15,
@@ -647,7 +890,7 @@
         "h": 9,
         "w": 8,
         "x": 16,
-        "y": 37
+        "y": 41
       },
       "hiddenSeries": false,
       "id": 17,
@@ -676,9 +919,9 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "flink_taskmanager_job_task_numBytesInLocalPerSecond{job_name=\"Relation_between_temperatures_IN_OUT_per_room\"}",
+          "expr": "flink_taskmanager_job_task_operator_KafkaConsumer_commit_latency_avg",
           "interval": "",
-          "legendFormat": "{{task_name}}",
+          "legendFormat": "",
           "refId": "A"
         }
       ],
@@ -686,7 +929,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Flink Bytes In",
+      "title": "Average Latency Kafka Consumer",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -722,98 +965,10 @@
         "align": false,
         "alignLevel": null
       }
-    },
-    {
-      "cacheTimeout": null,
-      "colorBackground": false,
-      "colorValue": false,
-      "colors": [
-        "#d44a3a",
-        "rgba(237, 129, 40, 0.89)",
-        "#299c46"
-      ],
-      "datasource": "Prometheus",
-      "decimals": 1,
-      "fieldConfig": {
-        "defaults": {
-          "custom": {}
-        },
-        "overrides": []
-      },
-      "format": "ms",
-      "gauge": {
-        "maxValue": 100,
-        "minValue": 0,
-        "show": false,
-        "thresholdLabels": false,
-        "thresholdMarkers": true
-      },
-      "gridPos": {
-        "h": 3,
-        "w": 24,
-        "x": 0,
-        "y": 46
-      },
-      "id": 21,
-      "interval": null,
-      "links": [],
-      "mappingType": 1,
-      "mappingTypes": [
-        {
-          "name": "value to text",
-          "value": 1
-        },
-        {
-          "name": "range to text",
-          "value": 2
-        }
-      ],
-      "maxDataPoints": 100,
-      "nullPointMode": "connected",
-      "nullText": null,
-      "postfix": "",
-      "postfixFontSize": "50%",
-      "prefix": "",
-      "prefixFontSize": "50%",
-      "rangeMaps": [
-        {
-          "from": "null",
-          "text": "N/A",
-          "to": "null"
-        }
-      ],
-      "repeat": null,
-      "sparkline": {
-        "fillColor": "rgba(31, 118, 189, 0.18)",
-        "full": false,
-        "lineColor": "rgb(31, 120, 193)",
-        "show": false,
-        "ymax": null,
-        "ymin": null
-      },
-      "tableColumn": "flink_jobmanager_job_uptime{host=\"job_cluster\", instance=\"job-cluster:9249\", job=\"flink\", job_id=\"00000000000000000000000000000000\", job_name=\"Relation_between_temperatures_IN_OUT_per_room\"}",
-      "targets": [
-        {
-          "expr": "flink_jobmanager_job_uptime{job_name=\"Relation_between_temperatures_IN_OUT_per_room\"}",
-          "format": "time_series",
-          "interval": "",
-          "intervalFactor": 1,
-          "legendFormat": "",
-          "refId": "A"
-        }
-      ],
-      "thresholds": ".5,.8",
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Uptime",
-      "type": "singlestat",
-      "valueFontSize": "80%",
-      "valueMaps": [],
-      "valueName": "current"
     }
   ],
   "refresh": "5s",
-  "schemaVersion": 25,
+  "schemaVersion": 19,
   "style": "dark",
   "tags": [],
   "templating": {
@@ -851,5 +1006,5 @@
   "timezone": "",
   "title": "Temperature Sensors",
   "uid": "RZSriMzMx",
-  "version": 1
+  "version": 6
 }

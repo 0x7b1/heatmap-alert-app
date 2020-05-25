@@ -15,15 +15,15 @@ import java.util.Random;
 
 public class SensorProducer {
     static String topicName = "sensor_temperatures";
+//    static String kafkaServer = "localhost:29092";
     static String kafkaServer = "kafka:9092";
-    static int numRooms = 5;
+    static int numRooms = 3;
 
     public static ProducerRecord<Room, Temperature> createTemperatureRecord(String source) {
         Random rand = new Random();
         String roomId = rand.nextInt(numRooms) + "_" + source;
         Room key = new Room(roomId);
 
-//        long timestamp = ZonedDateTime.now().toEpochSecond() * 1000;
         long timestamp = System.currentTimeMillis();
         int temperatureValue = rand.nextInt(20) + 20;
         Temperature value = new Temperature(temperatureValue, timestamp);
@@ -50,7 +50,7 @@ public class SensorProducer {
             producer.send(createTemperatureRecord("IN"));
             producer.send(createTemperatureRecord("OUT"));
 
-            Thread.sleep(500);
+            Thread.sleep(1000);
         }
     }
 }
