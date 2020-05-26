@@ -248,7 +248,7 @@ public class HeatmapProcess {
             .keyBy(e -> e.getRoomId());
 
         processTemperatureRelations(inKeyed, outKeyed);
-//        processAlerting(inKeyed, outKeyed);
+        processAlerting(inKeyed, outKeyed);
 
         System.out.println(env.getExecutionPlan());
 
