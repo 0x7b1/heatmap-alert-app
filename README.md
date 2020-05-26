@@ -23,7 +23,3 @@ The second cluster contains the orchestration for Flink, Prometheus, InfluxDB, a
 $ cd .. # go to root again
 $ docker-compose up -d --build
 ```
-
-## TODO
-
-- test .rebalance()

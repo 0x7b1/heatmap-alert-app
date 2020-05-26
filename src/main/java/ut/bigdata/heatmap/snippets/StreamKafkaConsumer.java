@@ -1,4 +1,4 @@
-package ut.bigdata.heatmap.processors;
+package ut.bigdata.heatmap.example;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

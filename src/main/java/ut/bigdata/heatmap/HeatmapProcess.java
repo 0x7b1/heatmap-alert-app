@@ -1,16 +1,8 @@
 package ut.bigdata.heatmap;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.apache.flink.api.common.functions.JoinFunction;
-import org.apache.flink.api.common.functions.MapFunction;
-import org.apache.flink.api.common.functions.ReduceFunction;
 import org.apache.flink.api.common.functions.RichMapFunction;
-import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.common.typeinfo.TypeHint;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
-import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.cep.CEP;
 import org.apache.flink.cep.PatternFlatSelectFunction;
@@ -23,52 +15,27 @@ import org.apache.flink.metrics.Counter;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.KeyedStream;
-import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.ProcessFunction;
-import org.apache.flink.streaming.api.functions.timestamps.BoundedOutOfOrdernessTimestampExtractor;
-import org.apache.flink.streaming.api.functions.windowing.WindowFunction;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
-import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
-import org.apache.flink.streaming.connectors.influxdb.InfluxDBConfig;
-import org.apache.flink.streaming.connectors.influxdb.InfluxDBPoint;
 import org.apache.flink.streaming.connectors.influxdb.InfluxDBSink;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
 import org.apache.flink.util.Collector;
-import org.apache.kafka.clients.consumer.Consumer;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
+import ut.bigdata.heatmap.models.TemperatureAlert;
 import ut.bigdata.heatmap.models.TemperatureRecord;
-import ut.bigdata.heatmap.processors.TemperatureWarning;
+import ut.bigdata.heatmap.models.TemperatureWarning;
+import ut.bigdata.heatmap.transformations.*;
 
 import java.util.*;
-import java.util.concurrent.TimeUnit;
-
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-class TemperatureWarningPattern {
-    private String roomId;
-    private Double avgTemperature;
-}
-
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-class TemperatureAlertPattern {
-    private String roomId;
-    private Double alertedTemperature;
-}
-
 
 public class HeatmapProcess {
     static String inputTopic = "sensor_temperatures";
     static String consumerGroup = "sensor_consumer";
 
-    static String kafkaAddress = "kafka:9092";
+        static String kafkaAddress = "kafka:9092";
 //    static String kafkaAddress = "localhost:29092";
 
-//        static String influxDBHost = "http://localhost:8086";
+//    static String influxDBHost = "http://localhost:8086";
     static String influxDBHost = "http://influxdb:8086";
 
     static String influxDBName = "sensor_temperatures";
@@ -79,175 +46,39 @@ public class HeatmapProcess {
 
     static int THRESHOLD_TEMPERATURE_ALERT = 30;
 
-    public static FlinkKafkaConsumer<TemperatureRecord> createTemperatureConsumer(String topic, String kafkaAddress, String consumerGroup) {
-        Properties props = new Properties();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaAddress);
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, consumerGroup);
-
-        return new FlinkKafkaConsumer<>(
-            topic,
-            new TemperatureRecordDeserializationSchema(),
-            props);
-    }
-
-    public static class TemperatureRecordTimestampExtractor extends BoundedOutOfOrdernessTimestampExtractor<TemperatureRecord> {
-        public TemperatureRecordTimestampExtractor(Time maxOutOfOrderness) {
-            super(maxOutOfOrderness);
-        }
-
-        @Override
-        public long extractTimestamp(TemperatureRecord temperatureRecord) {
-            return temperatureRecord.getTimestamp();
-        }
-    }
-
-    public static class TemperatureAverager implements WindowFunction<TemperatureRecord, Tuple3<String, Double, Long>, String, TimeWindow> {
-        @Override
-        public void apply(
-            String roomId,
-            TimeWindow timeWindow,
-            Iterable<TemperatureRecord> recordsWithinWindows,
-            Collector<Tuple3<String, Double, Long>> out) throws Exception {
-            int sum = 0;
-            int count = 0;
-
-            for (TemperatureRecord record : recordsWithinWindows) {
-                sum += record.getTemperature();
-                count += 1;
-            }
-
-            Double avgWindowBySource = sum * 1.0 / count;
-            Long windowTimestamp = timeWindow.getEnd();
-
-            out.collect(Tuple3.of(roomId, avgWindowBySource, windowTimestamp));
-        }
-    }
-
-    public static class JoinWindowsToTemperatureRelation implements JoinFunction<Tuple3<String, Double, Long>, Tuple3<String, Double, Long>, Tuple3<String, Double, Long>> {
-        @Override
-        public Tuple3<String, Double, Long> join(
-            Tuple3<String, Double, Long> avgIn,
-            Tuple3<String, Double, Long> avgOut) throws Exception {
-
-            String roomId = avgIn.f0;
-            Double indexRelation = avgIn.f1 / avgOut.f1;
-            Long windowTimestamp = avgIn.f2;
-
-            return Tuple3.of(roomId, indexRelation, windowTimestamp);
-        }
-    }
-
-    public static InfluxDBSink createInfluxSink(String influxDBHost, String influxDBName, String influxDBUser, String influxDBPassword) {
-        InfluxDBConfig config = InfluxDBConfig.builder(
-            influxDBHost,
-            influxDBUser,
-            influxDBPassword,
-            influxDBName)
-            .batchActions(1000)
-            .flushDuration(100, TimeUnit.MILLISECONDS)
-            .enableGzip(true)
-            .build();
-
-        return new InfluxDBSink(config);
-    }
-
-    public static class TemperatureAvgRoomsToInfluxDataPoint implements MapFunction<Tuple3<String, Double, Long>, InfluxDBPoint> {
-        String measurement = "";
-
-        public TemperatureAvgRoomsToInfluxDataPoint(String measurementName) {
-            this.measurement = measurementName;
-        }
-
-        @Override
-        public InfluxDBPoint map(Tuple3<String, Double, Long> record) throws Exception {
-            String measurement = this.measurement;
-            Long timestamp = record.f2;
-            HashMap<String, String> tags = new HashMap<>();
-            HashMap<String, Object> fields = new HashMap<>();
-
-            tags.put("room", record.f0);
-
-            fields.put("value", record.f1);
-
-            return new InfluxDBPoint(measurement, timestamp, tags, fields);
-        }
-    }
-
-    public static class TemperatureRoomsToInfluxDataPoint implements MapFunction<Tuple3<String, Double, Long>, InfluxDBPoint> {
-        String measurement;
-        String source;
-
-        public TemperatureRoomsToInfluxDataPoint(String measurementName, String source) {
-            this.measurement = measurementName;
-            this.source = source;
-        }
-
-        @Override
-        public InfluxDBPoint map(Tuple3<String, Double, Long> record) throws Exception {
-            String measurement = this.measurement;
-            Long timestamp = record.f2;
-            HashMap<String, String> tags = new HashMap<>();
-            HashMap<String, Object> fields = new HashMap<>();
-
-            tags.put("room", record.f0);
-            tags.put("source", source);
-
-            fields.put("value", record.f1);
-
-            return new InfluxDBPoint(measurement, timestamp, tags, fields);
-        }
-    }
-
-    public static void testKafkaConnection() throws Exception {
-        final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
-
-        FlinkKafkaConsumer<TemperatureRecord> kafkaConsumerSource =
-            createTemperatureConsumer(inputTopic, kafkaAddress, consumerGroup);
-
-        DataStream<TemperatureRecord> temperatureRecords = env
-            .addSource(kafkaConsumerSource)
-            .assignTimestampsAndWatermarks(new TemperatureRecordTimestampExtractor(Time.seconds(0)));
-
-        temperatureRecords.print();
-
-        env.execute("Relation between temperatures IN/OUT per room");
-    }
-
-    public static void runTemperatureStreaming() throws Exception {
-        final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
-
-        FlinkKafkaConsumer<TemperatureRecord> kafkaConsumerSource =
-            createTemperatureConsumer(inputTopic, kafkaAddress, consumerGroup);
-
-        // Reading input stream from kafka topic
-        DataStream<TemperatureRecord> temperatureRecords = env
-            .addSource(kafkaConsumerSource)
-            .assignTimestampsAndWatermarks(new TemperatureRecordTimestampExtractor(Time.seconds(0)))
-            // This will spread messages from partitions evenly across flink workers
-            .rebalance();
-
-        // Input stream of IN sensor events
-        KeyedStream<TemperatureRecord, String> inKeyed = temperatureRecords
-            .filter(e -> e.getSource().equals("IN"))
-            .keyBy(e -> e.getRoomId());
-
+    public static void processTemperatureRelations(KeyedStream<TemperatureRecord, String> inKeyed, KeyedStream<TemperatureRecord, String> outKeyed) {
         DataStream<Tuple3<String, Double, Long>> in = inKeyed
             .timeWindow(Time.seconds(5))
             .apply(new TemperatureAverager());
-
-
-        // Input stream of OUT sensor events
-        KeyedStream<TemperatureRecord, String> outKeyed = temperatureRecords
-            .filter(e -> e.getSource().equals("OUT"))
-            .keyBy(e -> e.getRoomId());
 
         DataStream<Tuple3<String, Double, Long>> out = outKeyed
             .timeWindow(Time.seconds(5))
             .apply(new TemperatureAverager());
 
+        // Finding the relation between temperatures IN/OUT
+        DataStream<Tuple3<String, Double, Long>> temperatureRoomRelations = in
+            .join(out)
+            .where(e -> e.f0)
+            .equalTo(e -> e.f0)
+            .window(TumblingEventTimeWindows.of(Time.seconds(1)))
+            .apply(new JoinWindowsToTemperatureRelation());
 
+        // Sinking to InfluxDB
+        InfluxDBSink influxDBSink = DataBuilder.createInfluxSink(influxDBHost, influxDBName, influxDBUser, influxDBPassword);
+        temperatureRoomRelations
+            .map(new TemperatureAvgRoomsToInfluxDataPoint(influxMeasurementAvg))
+            .addSink(influxDBSink);
+
+        // Sink to stdout
+        temperatureRoomRelations.print();
+
+        // Sinking IN/OUT room temperatures
+        in.map(new TemperatureRoomsToInfluxDataPoint(influxMeasurementTemperatures, "IN")).addSink(influxDBSink);
+        out.map(new TemperatureRoomsToInfluxDataPoint(influxMeasurementTemperatures, "OUT")).addSink(influxDBSink);
+
+    }
+
+    public static void processAlerting(KeyedStream<TemperatureRecord, String> inKeyed, KeyedStream<TemperatureRecord, String> outKeyed) {
         // Create a pattern over averaged temperatures in windows that are going above the threshold within an interval
         Pattern<TemperatureRecord, ?> warningPattern = Pattern
             .<TemperatureRecord>begin("first")
@@ -271,8 +102,8 @@ public class HeatmapProcess {
             .within(Time.seconds(5));
 
         // Create an alert if two consecutive warnings appear in the given interval
-        Pattern<TemperatureWarningPattern, ?> alertPattern = Pattern
-            .<TemperatureWarningPattern>begin("first")
+        Pattern<TemperatureWarning, ?> alertPattern = Pattern
+            .<TemperatureWarning>begin("first")
             .next("second")
             .within(Time.seconds(10));
 
@@ -283,41 +114,41 @@ public class HeatmapProcess {
         );
 
         // Create temperature warning stream for each warning matched pattern (IN)
-        DataStream<TemperatureWarningPattern> warningsIn = warningPatternStreamIn.select(
-            new PatternSelectFunction<TemperatureRecord, TemperatureWarningPattern>() {
+        DataStream<TemperatureWarning> warningsIn = warningPatternStreamIn.select(
+            new PatternSelectFunction<TemperatureRecord, TemperatureWarning>() {
                 @Override
-                public TemperatureWarningPattern select(Map<String, List<TemperatureRecord>> pattern) throws Exception {
+                public TemperatureWarning select(Map<String, List<TemperatureRecord>> pattern) throws Exception {
                     TemperatureRecord first = (TemperatureRecord) pattern.get("first").get(0);
                     TemperatureRecord second = (TemperatureRecord) pattern.get("second").get(0);
 
                     double avgTemperatures = (first.getTemperature() + second.getTemperature()) / 2;
-                    return new TemperatureWarningPattern(first.getRoomId(), avgTemperatures);
+                    return new TemperatureWarning(first.getRoomId(), avgTemperatures);
                 }
             }
         );
 
         // Create the pattern stream for alert pattern (IN)
-        PatternStream<TemperatureWarningPattern> alertPatternStreamIn = CEP.pattern(
+        PatternStream<TemperatureWarning> alertPatternStreamIn = CEP.pattern(
             warningsIn,
             alertPattern
         );
 
         // Create the temperature alert only if the second temperature warning avg is higher than the first one (IN)
-        DataStream<TemperatureAlertPattern> alertsIn = alertPatternStreamIn.flatSelect(
-            new PatternFlatSelectFunction<TemperatureWarningPattern, TemperatureAlertPattern>() {
+        DataStream<TemperatureAlert> alertsIn = alertPatternStreamIn.flatSelect(
+            new PatternFlatSelectFunction<TemperatureWarning, TemperatureAlert>() {
                 @Override
                 public void flatSelect(
-                    Map<String, List<TemperatureWarningPattern>> pattern,
-                    Collector<TemperatureAlertPattern> collector) throws Exception {
-                    TemperatureWarningPattern first = pattern.get("first").get(0);
-                    TemperatureWarningPattern second = pattern.get("second").get(0);
+                    Map<String, List<TemperatureWarning>> pattern,
+                    Collector<TemperatureAlert> collector) throws Exception {
+                    TemperatureWarning first = pattern.get("first").get(0);
+                    TemperatureWarning second = pattern.get("second").get(0);
 
                     if (first.getAvgTemperature() < second.getAvgTemperature()) {
-                        collector.collect(new TemperatureAlertPattern(first.getRoomId(), second.getAvgTemperature()));
+                        collector.collect(new TemperatureAlert(first.getRoomId(), second.getAvgTemperature()));
                     }
                 }
             })
-            .map(new RichMapFunction<TemperatureAlertPattern, TemperatureAlertPattern>() {
+            .map(new RichMapFunction<TemperatureAlert, TemperatureAlert>() {
                 private transient Counter eventCounter;
 
                 @Override
@@ -327,7 +158,7 @@ public class HeatmapProcess {
                 }
 
                 @Override
-                public TemperatureAlertPattern map(TemperatureAlertPattern temperatureAlertPattern) throws Exception {
+                public TemperatureAlert map(TemperatureAlert temperatureAlertPattern) throws Exception {
                     eventCounter.inc();
                     return temperatureAlertPattern;
                 }
@@ -341,41 +172,41 @@ public class HeatmapProcess {
 
 
         // Create temperature warning stream for each warning matched pattern (OUT)
-        DataStream<TemperatureWarningPattern> warningsOut = warningPatternStreamIn.select(
-            new PatternSelectFunction<TemperatureRecord, TemperatureWarningPattern>() {
+        DataStream<TemperatureWarning> warningsOut = warningPatternStreamIn.select(
+            new PatternSelectFunction<TemperatureRecord, TemperatureWarning>() {
                 @Override
-                public TemperatureWarningPattern select(Map<String, List<TemperatureRecord>> pattern) throws Exception {
+                public TemperatureWarning select(Map<String, List<TemperatureRecord>> pattern) throws Exception {
                     TemperatureRecord first = (TemperatureRecord) pattern.get("first").get(0);
                     TemperatureRecord second = (TemperatureRecord) pattern.get("second").get(0);
 
                     double avgTemperatures = (first.getTemperature() + second.getTemperature()) / 2;
-                    return new TemperatureWarningPattern(first.getRoomId(), avgTemperatures);
+                    return new TemperatureWarning(first.getRoomId(), avgTemperatures);
                 }
             }
         );
 
         // Create the pattern stream for alert pattern (OUT)
-        PatternStream<TemperatureWarningPattern> alertPatternStreamOut = CEP.pattern(
+        PatternStream<TemperatureWarning> alertPatternStreamOut = CEP.pattern(
             warningsOut,
             alertPattern
         );
 
         // Create the temperature alert only if the second temperature warning avg is higher than the first one (OUT)
-        DataStream<TemperatureAlertPattern> alertsOut = alertPatternStreamOut.flatSelect(
-            new PatternFlatSelectFunction<TemperatureWarningPattern, TemperatureAlertPattern>() {
+        DataStream<TemperatureAlert> alertsOut = alertPatternStreamOut.flatSelect(
+            new PatternFlatSelectFunction<TemperatureWarning, TemperatureAlert>() {
                 @Override
                 public void flatSelect(
-                    Map<String, List<TemperatureWarningPattern>> pattern,
-                    Collector<TemperatureAlertPattern> collector) throws Exception {
-                    TemperatureWarningPattern first = pattern.get("first").get(0);
-                    TemperatureWarningPattern second = pattern.get("second").get(0);
+                    Map<String, List<TemperatureWarning>> pattern,
+                    Collector<TemperatureAlert> collector) throws Exception {
+                    TemperatureWarning first = pattern.get("first").get(0);
+                    TemperatureWarning second = pattern.get("second").get(0);
 
                     if (first.getAvgTemperature() < second.getAvgTemperature()) {
-                        collector.collect(new TemperatureAlertPattern(first.getRoomId(), second.getAvgTemperature()));
+                        collector.collect(new TemperatureAlert(first.getRoomId(), second.getAvgTemperature()));
                     }
                 }
             })
-            .map(new RichMapFunction<TemperatureAlertPattern, TemperatureAlertPattern>() {
+            .map(new RichMapFunction<TemperatureAlert, TemperatureAlert>() {
                 private transient Counter eventCounter;
 
                 @Override
@@ -385,38 +216,42 @@ public class HeatmapProcess {
                 }
 
                 @Override
-                public TemperatureAlertPattern map(TemperatureAlertPattern temperatureAlertPattern) throws Exception {
+                public TemperatureAlert map(TemperatureAlert temperatureAlertPattern) throws Exception {
                     eventCounter.inc();
                     return temperatureAlertPattern;
                 }
             });
-
-        // Finding the relation between temperatures IN/OUT
-        DataStream<Tuple3<String, Double, Long>> temperatureRoomSourceAvgs = in
-            .join(out)
-            .where(e -> e.f0)
-            .equalTo(e -> e.f0)
-            .window(TumblingEventTimeWindows.of(Time.seconds(1)))
-            .apply(new JoinWindowsToTemperatureRelation());
-
-        // Sinking to InfluxDB
-        InfluxDBSink influxDBSink = createInfluxSink(influxDBHost, influxDBName, influxDBUser, influxDBPassword);
-        temperatureRoomSourceAvgs
-            .map(new TemperatureAvgRoomsToInfluxDataPoint(influxMeasurementAvg))
-            .addSink(influxDBSink);
-
-        // Sinking IN/OUT room temperatures
-        in.map(new TemperatureRoomsToInfluxDataPoint(influxMeasurementTemperatures, "IN")).addSink(influxDBSink);
-        out.map(new TemperatureRoomsToInfluxDataPoint(influxMeasurementTemperatures, "OUT")).addSink(influxDBSink);
-
-        temperatureRoomSourceAvgs.print();
-        System.out.println(env.getExecutionPlan());
-
-        env.execute("Relation between temperatures IN/OUT per room");
     }
 
     public static void main(String[] args) throws Exception {
-//        testKafkaConnection();
-        runTemperatureStreaming();
+        final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
+
+        FlinkKafkaConsumer<TemperatureRecord> kafkaConsumerSource =
+            DataBuilder.createTemperatureConsumer(inputTopic, kafkaAddress, consumerGroup);
+
+        // Reading input stream from kafka topic
+        DataStream<TemperatureRecord> temperatureRecords = env
+            .addSource(kafkaConsumerSource)
+            .assignTimestampsAndWatermarks(new TemperatureRecordTimestampExtractor(Time.seconds(3)))
+            // This will spread messages from partitions evenly across flink workers
+            .rebalance();
+
+        // Input stream of IN sensor events
+        KeyedStream<TemperatureRecord, String> inKeyed = temperatureRecords
+            .filter(e -> e.getSource().equals("IN"))
+            .keyBy(e -> e.getRoomId());
+
+        // Input stream of OUT sensor events
+        KeyedStream<TemperatureRecord, String> outKeyed = temperatureRecords
+            .filter(e -> e.getSource().equals("OUT"))
+            .keyBy(e -> e.getRoomId());
+
+        processTemperatureRelations(inKeyed, outKeyed);
+//        processAlerting(inKeyed, outKeyed);
+
+        System.out.println(env.getExecutionPlan());
+
+        env.execute("Relation between temperatures IN/OUT per room");
     }
 }

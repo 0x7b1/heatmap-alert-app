@@ -1,4 +1,4 @@
-package ut.bigdata.heatmap;
+package ut.bigdata.heatmap.transformations;
 
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.JsonNode;

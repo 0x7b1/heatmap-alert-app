@@ -1,5 +1,9 @@
 package ut.bigdata.heatmap.example;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.metrics.Counter;
@@ -11,12 +15,27 @@ import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
-import ut.bigdata.heatmap.processors.SensorInOut;
-import ut.bigdata.heatmap.processors.SensorReading;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+class SensorReading {
+    private long roomId;
+    private long timestamp;
+    private double temperature;
+    private SensorInOut inOut;
+
+}
+
+enum SensorInOut {
+    IN,
+    OUT,
+}
 
 public class HeatmapFixedSource {
     public static void main(String[] args) throws Exception {
